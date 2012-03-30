@@ -6,8 +6,9 @@ What does all that mean?
 ------------------------
 If you have an object that can be in multiple different states, with rules that determine when it can move between those states, and things that should happen when it changes state, you typically have a few choices:
 
-Try to model it all correctly using a bunch of different boolean fields.
-Follow the State Machine design pattern, define a base State and make descendants for each state with trigger methods between them.
+1. Try to model it all correctly using a bunch of different boolean fields.
+2. Follow the State Machine design pattern, define a base State and make descendants for each state with trigger methods between them.
+
 For a trivial statemachine, use 1) and move on with your life.
 
 For a non-trivial statemachine, 1) becomes a complex nightmare very quickly, and 2) not only takes too long but also makes it difficult to see in one place the full configuration of your states.
