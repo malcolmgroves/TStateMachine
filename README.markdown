@@ -50,6 +50,10 @@ That same state diagram configured to run in TStateMachine looks like:
    
     FBugState.Active := True;
 
+TODO
+----
+More xmldoc, demos, the usual
+
 Credits
 -------
 TStateMachine owes an obvious debt to the [Stateless project](http://code.google.com/p/stateless/). I was partway through implementing TStateMachine when I came across Stateless, and it definitely influenced the direction from that point on.
