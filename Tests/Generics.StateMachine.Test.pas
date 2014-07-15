@@ -70,6 +70,8 @@ type
     procedure TestNumberOfStates;
     procedure TestInitialState;
     procedure TestTriggerNoGuard;
+    procedure TestTriggerExists;
+    procedure TestTriggerExistsFalse;
   end;
 
   TestStringDoorStates = class(TTestCase)
@@ -677,10 +679,11 @@ end;
 procedure TestEnumDoorStates.SetUp;
 begin
   FDoorStates := TStateMachine<TDoorStates, TDoorTriggers>.Create;
-  FDoorStates.State(TDoorStates.dsOpen).Trigger(TDoorTriggers.dtClose,
-    TDoorStates.dsClosed);
-  FDoorStates.State(TDoorStates.dsClosed).Initial.Trigger(TDoorTriggers.dtOpen,
-    TDoorStates.dsOpen);
+  FDoorStates.State(TDoorStates.dsOpen)
+                .Trigger(TDoorTriggers.dtClose, TDoorStates.dsClosed);
+  FDoorStates.State(TDoorStates.dsClosed)
+                .Initial
+                .Trigger(TDoorTriggers.dtOpen, TDoorStates.dsOpen);
   FDoorStates.Active := True;
 end;
 
@@ -696,6 +699,20 @@ begin
   Check(FDoorStates.CurrentState <> nil, 'CurrentState should not be nil');
   Check(FDoorStates.CurrentState.State = TDoorStates.dsClosed,
     'Initial state should be dsClosed');
+end;
+
+procedure TestEnumDoorStates.TestTriggerExistsFalse;
+begin
+  Check(FDoorStates.CurrentState.State = TDoorStates.dsClosed,
+    'Initial state should be Closed');
+  CheckTrue(FDoorStates.CurrentState.TriggerExists(dtOpen), 'TriggerExists(dtOpen) should return true from Closed state');
+end;
+
+procedure TestEnumDoorStates.TestTriggerExists;
+begin
+  Check(FDoorStates.CurrentState.State = TDoorStates.dsClosed,
+    'Initial state should be Closed');
+  CheckFalse(FDoorStates.CurrentState.TriggerExists(dtClose), 'TriggerExists(dtClose) should return false from Closed state');
 end;
 
 procedure TestEnumDoorStates.TestNumberOfStates;

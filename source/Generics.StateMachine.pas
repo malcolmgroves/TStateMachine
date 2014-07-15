@@ -82,6 +82,7 @@ type
       : TTStateHolder<TState, TTrigger>;
     function Initial: TTStateHolder<TState, TTrigger>;
     procedure Execute(ATrigger: TTrigger);
+    function TriggerExists(ATrigger: TTrigger) : boolean;
     property TriggerCount: Integer read GetTriggerCount;
     property State: TState read FState;
   end;
@@ -228,6 +229,14 @@ function TTStateHolder<TState, TTrigger>.Initial
 begin
   FStateMachine.SetInitialState(FState);
   Result := self;
+end;
+
+function TTStateHolder<TState, TTrigger>.TriggerExists(
+  ATrigger: TTrigger): boolean;
+var
+  LTrigger: TTriggerHolder<TState, TTrigger>;
+begin
+  Result := FTriggers.TryGetValue(ATrigger, LTrigger);
 end;
 
 function TTStateHolder<TState, TTrigger>.OnEntry(AOnEntry: TTransitionProc)
