@@ -16,9 +16,9 @@ program StateMachineTest;
 
 uses
   Forms,
-  TestFramework,
-  GUITestRunner,
-  TextTestRunner,
+// Only one of the next two lines should be uncommented.
+//  DUnitTestRunner, // uncomment to use DUnit, or
+  TestInsight.Dunit, // uncomment to use TestInsight
   Generics.StateMachine in '..\source\Generics.StateMachine.pas',
   Generics.StateMachine.Test in 'Generics.StateMachine.Test.pas',
   Generics.StateMachine.Test.BugStates in 'Generics.StateMachine.Test.BugStates.pas',
@@ -29,10 +29,5 @@ uses
 begin
   ReportMemoryLeaksOnShutdown := True;
   Application.Initialize;
-  if IsConsole then
-    with TextTestRunner.RunRegisteredTests do
-      Free
-  else
-    GUITestRunner.RunRegisteredTests;
-
+  RunRegisteredTests;
 end.
