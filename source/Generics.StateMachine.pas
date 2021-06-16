@@ -30,11 +30,6 @@ interface
 uses
   System.SysUtils, Generics.Collections, Generics.Nullable;
 
-{ TODO : What should happen if you add a Guard, OnEntry or OnExit and there is
-  already one? Fail, or maintain a list? }
-{ TODO : GuardProc and TransitionProc should take generic parameters that
-  describe the states/triggers involved }
-
 type
   EStateMachineException = class(Exception);
   EGuardFailure = class(EStateMachineException);
@@ -42,17 +37,17 @@ type
   EUnknownState = class(EStateMachineException);
   EInvalidStateMachine = class(EStateMachineException);
 
-  TGuardProc = reference to function: boolean;
+  TGuardProc<TTrigger> = reference to function(Trigger : TTrigger): boolean;
   TTransitionProc = reference to procedure;
 
   TTriggerHolder<TState, TTrigger> = class
   strict private
     FTrigger: TTrigger;
     FDestination: TState;
-    FGuard: TGuardProc;
+    FGuard: TGuardProc<TTrigger>;
   public
     constructor Create(ATrigger: TTrigger; ADestination: TState;
-      AGuard: TGuardProc = nil); virtual;
+      AGuard: TGuardProc<TTrigger> = nil); virtual;
     function CanExecute: boolean;
     property Destination: TState read FDestination;
   end;
@@ -75,7 +70,7 @@ type
       AState: TState); virtual;
     destructor Destroy; override;
     function Trigger(ATrigger: TTrigger; ADestination: TState;
-      AGuard: TGuardProc = nil): TTStateHolder<TState, TTrigger>;
+      AGuard: TGuardProc<TTrigger> = nil): TTStateHolder<TState, TTrigger>;
     function OnEntry(AOnEntry: TTransitionProc)
       : TTStateHolder<TState, TTrigger>;
     function OnExit(AOnExit: TTransitionProc)
@@ -144,13 +139,13 @@ implementation
 function TTriggerHolder<TState, TTrigger>.CanExecute: boolean;
 begin
   if Assigned(FGuard) then
-    Result := FGuard
+    Result := FGuard(FTrigger)
   else
     Result := True;
 end;
 
 constructor TTriggerHolder<TState, TTrigger>.Create(ATrigger: TTrigger;
-  ADestination: TState; AGuard: TGuardProc);
+  ADestination: TState; AGuard: TGuardProc<TTrigger>);
 begin
   inherited Create;
   FTrigger := ATrigger;
@@ -161,7 +156,7 @@ end;
 { TTStateCaddy<TState, TTrigger> }
 
 function TTStateHolder<TState, TTrigger>.Trigger(ATrigger: TTrigger;
-  ADestination: TState; AGuard: TGuardProc): TTStateHolder<TState, TTrigger>;
+  ADestination: TState; AGuard: TGuardProc<TTrigger>): TTStateHolder<TState, TTrigger>;
 var
   LConfiguredTrigger: TTriggerHolder<TState, TTrigger>;
 begin
@@ -333,7 +328,6 @@ begin
   FCurrentState := AState;
 
   CurrentState.Enter;
-
 end;
 
 function TStateMachine<TState, TTrigger>.State(AState: TState)

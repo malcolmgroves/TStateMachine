@@ -17,8 +17,8 @@ program StateMachineTest;
 uses
   Forms,
 // Only one of the next two lines should be uncommented.
-//  DUnitTestRunner, // uncomment to use DUnit, or
-  TestInsight.Dunit, // uncomment to use TestInsight
+  DUnitTestRunner, // uncomment to use DUnit, or
+//  TestInsight.Dunit, // uncomment to use TestInsight
   Generics.StateMachine in '..\source\Generics.StateMachine.pas',
   Generics.StateMachine.Test in 'Generics.StateMachine.Test.pas',
   Generics.StateMachine.Test.BugStates in 'Generics.StateMachine.Test.BugStates.pas',
