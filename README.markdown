@@ -48,6 +48,7 @@ That same state diagram configured to run in TStateMachine looks like:
     FBugState.State(TBugStates.Released);
     FBugState.State(TBugStates.Withdrawn);
    
+    FBugState.Validate;
     FBugState.Active := True;
 
 TODO
