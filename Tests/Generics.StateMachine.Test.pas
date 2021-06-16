@@ -53,10 +53,11 @@ type
     procedure TestAddState;
     procedure TestActiveWithNoInitialState;
     procedure TestTwoInitialStates;
+    procedure TestUnreachableStates;
   end;
 
   // test data
-  TDoorStates = (dsOpen, dsClosed);
+  TDoorStates = (dsOpen, dsClosed, dsSlightlyAjar, dsMoreAjar);
   TDoorTriggers = (dtOpen, dtClose);
 
   ENotifyException = class(Exception);
@@ -700,6 +701,39 @@ begin
     except
       on E: EInvalidStateMachine do
         Check(true, 'As expected for a statemachine with two initial states');
+    end;
+  finally
+    FDoorStates.Free;
+  end;
+end;
+
+procedure TestTStateMachine.TestUnreachableStates;
+var
+  FDoorStates: TStateMachine<TDoorStates, TDoorTriggers>;
+begin
+  FDoorStates := TStateMachine<TDoorStates, TDoorTriggers>.Create;
+  try
+    FDoorStates
+      .State(TDoorStates.dsOpen)
+        .Initial
+        .Trigger(TDoorTriggers.dtClose, TDoorStates.dsClosed);
+    FDoorStates
+      .State(TDoorStates.dsClosed)
+        .Trigger(TDoorTriggers.dtOpen, TDoorStates.dsOpen);
+    FDoorStates
+      .State(TDoorStates.dsSlightlyAjar)  // unreachable state
+        .Trigger(TDoorTriggers.dtOpen, TDoorStates.dsOpen)
+        .Trigger(TDoorTriggers.dtClose, TDoorStates.dsClosed);
+    FDoorStates
+      .State(TDoorStates.dsMoreAjar)      // unreachable state
+        .Trigger(TDoorTriggers.dtOpen, TDoorStates.dsOpen)
+        .Trigger(TDoorTriggers.dtClose, TDoorStates.dsClosed);
+    try
+      FDoorStates.Validate;
+      Check(false, 'Two unreachable states, so validate should have failed');
+    except
+      on E: EInvalidStateMachine do
+        Check(true, 'As expected for a statemachine with two unreachable states');
     end;
   finally
     FDoorStates.Free;

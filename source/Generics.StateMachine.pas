@@ -69,6 +69,7 @@ type
     constructor Create(AStateMachine: TStateMachine<TState, TTrigger>;
       AState: TState); virtual;
     destructor Destroy; override;
+    function Destinations : TList<TState>;
     function Trigger(ATrigger: TTrigger; ADestination: TState;
       AGuard: TGuardProc<TTrigger> = nil): TTStateHolder<TState, TTrigger>;
     function OnEntry(AOnEntry: TTransitionProc)
@@ -124,6 +125,7 @@ type
     /// parameter.
     /// </returns>
     function State(AState: TState): TTStateHolder<TState, TTrigger>;
+    procedure Validate;
     property StateCount: Integer read GetStateCount;
     property CurrentState: TTStateHolder<TState, TTrigger>
       read GetCurrentState;
@@ -174,6 +176,15 @@ begin
   FTriggers := TObjectDictionary < TTrigger, TTriggerHolder < TState,
     TTrigger >>.Create([doOwnsValues]);
   FState := AState;
+end;
+
+function TTStateHolder<TState, TTrigger>.Destinations: TList<TState>;
+var
+  LTriggerHolder: TTriggerHolder<TState, TTrigger>;
+begin
+  Result := TList<TState>.Create;
+  for LTriggerHolder in FTriggers.Values do
+    Result.Add(LTriggerHolder.Destination);
 end;
 
 destructor TTStateHolder<TState, TTrigger>.Destroy;
@@ -277,7 +288,7 @@ var
   LInitialState: TTStateHolder<TState, TTrigger>;
 begin
   if not FInitialState.HasValue then
-    raise EInvalidStateMachine.Create('StateMachine has not initial state');
+    raise EInvalidStateMachine.Create('StateMachine has no initial state');
 
   if not FStates.TryGetValue(FInitialState, LInitialState) then
     raise EUnknownState.Create('Unable to find Initial State');
@@ -328,6 +339,51 @@ begin
   FCurrentState := AState;
 
   CurrentState.Enter;
+end;
+
+procedure TStateMachine<TState, TTrigger>.Validate;
+var
+  LUnreachableStates : TList<TState>;
+  LStateHolder, LInitialState : TTStateHolder<TState, TTrigger>;
+  LState: TState;
+  LDestinations : TList<TState>;
+  LValid : boolean;
+begin
+  // State Machine has initial state?
+  LInitialState := InitialState;
+  // all states are reachable?
+  LUnreachableStates := TList<TState>.Create;
+  try
+    // fill all states
+    for LState in FStates.Keys do
+    begin
+      LUnreachableStates.Add(LState);
+    end;
+    // remove initial state, as it is valid to have an initial state with
+    // no incoming trigger
+    LUnreachableStates.Remove(InitialState.State);
+    // remove those which are destinations of triggers
+    for LStateHolder in FStates.Values do
+    begin
+      LDestinations := LStateHolder.Destinations;
+      try
+        for LState in LDestinations do
+          LUnreachableStates.Remove(LState);
+      finally
+        LDestinations.Free;
+      end;
+    end;
+    if LUnreachableStates.Count > 0 then
+    begin
+      LValid := False;
+      // would be nice to include the states in the message, however will need to
+      // research generic way to convert TState to string
+      raise EInvalidStateMachine.Create(Format('State Machine has %d unreachable state(s)', [LUnreachableStates.Count]));
+    end;
+  finally
+    LUnreachableStates.Free;
+  end;
+
 end;
 
 function TStateMachine<TState, TTrigger>.State(AState: TState)
